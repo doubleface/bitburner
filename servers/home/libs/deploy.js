@@ -19,13 +19,14 @@ export async function deployInstancesToServers({ns, instance, servers, timeOffse
       if (currentInstance.length === 0 && totalRam - (getMaxRam(currentServer) - currentRam) > instanceRam) {
         currentInstance = [...instance]
       }
-      ns.print('deploy instance ', ++count)
+      ns.print('deploy instance on ', currentServer.hostname, ': ', ++count)
       ns.print('toRun:', toRun)
       for (const script of Object.keys(toRun)) {
         ns.scp(script, currentServer.hostname)
         ns.exec(script, currentServer.hostname, toRun[script], target)
       }
-      if (givenServers.length) await ns.sleep(timeOffset)
+      ns.print('Wait ', ns.tFormat(timeOffset), '...')
+      await ns.sleep(timeOffset)
     }
     totalRam-= getMaxRam(currentServer)
   } while (givenServers.length)

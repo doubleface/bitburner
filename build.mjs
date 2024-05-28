@@ -3,10 +3,7 @@ import { BitburnerPlugin } from 'esbuild-bitburner-plugin';
 
 const createContext = async () => await context({
   entryPoints: [
-    'servers/**/*.js',
-    'servers/**/*.jsx',
-    'servers/**/*.ts',
-    'servers/**/*.tsx',
+    'servers/**/*.js'
   ],
   outbase: "./servers",
   outdir: "./build",
@@ -15,6 +12,7 @@ const createContext = async () => await context({
       port: 12525,
       types: 'NetscriptDefinitions.d.ts',
       mirror: {
+        './import': ['home']
       },
       distribute: {
       }

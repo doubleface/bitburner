@@ -34,7 +34,10 @@ export async function main(ns) {
       ns.tprint('In loop...')
       ns.print('weakenRamNeeded: ', ns.formatRam(weakenRamNeeded))
       ns.print('totalRam: ', ns.formatRam(totalRam))
-      const instance = createInstance('loop/weaken.js', 1, weakenRam)
+      const threads = (total / weakenRamNeeded) > 1000
+        ? 1000
+        : 1
+      const instance = createInstance('loop/weaken.js', threads, weakenRam)
       const timeOffset = weakenTime / (totalRam / weakenRam)
       await deployInstancesToServers({
         ns,

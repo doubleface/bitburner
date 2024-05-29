@@ -14,7 +14,9 @@ export async function deployInstancesToServers({ns, instance, servers, timeOffse
       while (currentInstance.length && currentRam >= currentInstance[0].ram) {
         const currentThread = currentInstance.shift()
         currentRam -= currentThread.ram
-        toRun[currentThread.script] = toRun[currentThread.script] === undefined ? 1 : toRun[currentThread.script] + 1
+        toRun[currentThread.script] = toRun[currentThread.script] === undefined
+          ? [1, currentThread.offset ?? 0]
+          : [toRun[currentThread.script][0] + 1, currentThread.offset ?? 0]
       }
       if (currentInstance.length === 0 && totalRam - (getMaxRam(currentServer) - currentRam) > instanceRam) {
         currentInstance = [...instance]
@@ -23,7 +25,7 @@ export async function deployInstancesToServers({ns, instance, servers, timeOffse
       ns.print('toRun:', toRun)
       for (const script of Object.keys(toRun)) {
         ns.scp(script, currentServer.hostname)
-        ns.exec(script, currentServer.hostname, toRun[script], target)
+        ns.exec(script, currentServer.hostname, toRun[script][0], target, toRun[script][1] ?? 0)
       }
       ns.print('Wait ', ns.tFormat(timeOffset), '...')
       await ns.sleep(timeOffset)

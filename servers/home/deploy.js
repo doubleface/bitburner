@@ -67,8 +67,8 @@ export async function main(ns) {
   }
 
   const instance = [
-    ...Array(hackThreads).fill({ script: 'loop/hack.js', ram: hackScriptRam }),
-    ...Array(growThreads).fill({ script: 'loop/grow.js', ram: growScriptRam }),
+    ...Array(hackThreads).fill({ script: 'loop/hack.js', ram: hackScriptRam, offset: hackTime * 3 - 2000 }),
+    ...Array(growThreads).fill({ script: 'loop/grow.js', ram: growScriptRam, offset: hackTime * 0.8 - 1000 }),
     ...Array(weakenThreads).fill({ script: 'loop/weaken.js', ram: weakenScriptRam })
   ]
   ns.print('new hackThreads: ', hackThreads)

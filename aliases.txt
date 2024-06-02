@@ -1,0 +1,10 @@
+alias checkNextActions=run actions/checkNextActions.js
+alias doNextAction=run actions/doNextAction.js
+alias listNextActions=run actions/listActions.js
+alias deployNoodles=run deploy.js n00dles -g 7 -h 4 -w 1 --safetyFactor 1
+alias start=run start.js
+alias update=run update.js
+alias sbuy=buy BruteSSH.exe ; buy FTPCrack.exe ; buy relaySMTP.exe ; buy HTTPWorm.exe ; buy SQLInject.exe
+global alias sconnect=run libs/connect.js
+global alias prepare=run prepare.js
+global alias deploy=run deploy.js

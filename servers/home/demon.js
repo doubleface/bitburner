@@ -11,6 +11,8 @@ export async function main(ns) {
     updateHud(ns)
 
     counter++
+
+    await runAndWait(ns, 'actions/doNextAction.js')
     await ns.sleep(1000)
   }
 }

@@ -6,6 +6,7 @@ export async function main(ns) {
     ['offset', -1],
     ['dryRun', false],
     ['safetyFactor', 10],
+    ['nbInstancesLimit', 1000],
     ['g', null],
     ['h', null],
     ['w', null]
@@ -51,9 +52,9 @@ export async function main(ns) {
     if (hackThreads === 0) {
       throw new Error('Cannot deploy with 0 hack threads')
     }
-  } else if (nbInstances > 1000) {
-    const factor = nbInstances / 1000
-    nbInstances = 1000
+  } else if (nbInstances > flags.nbInstancesLimit) {
+    const factor = nbInstances / flags.nbInstancesLimit
+    nbInstances = flags.nbInstancesLimit
     hackThreads*= factor
     growThreads*= factor
     weakenThreads*= factor

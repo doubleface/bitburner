@@ -1,5 +1,6 @@
 # Logs
 import/*
+servers/home/data/*
 logs
 *.log
 npm-debug.log*

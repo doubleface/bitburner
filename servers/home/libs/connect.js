@@ -10,7 +10,7 @@ export async function main(ns) {
     .filter(Boolean)
     .map(s => `connect ${s};`)
     .join('')
-  execCommand(command)
+  execCommand(command + 'backdoor')
 }
 
 export function autocomplete(data, args) {

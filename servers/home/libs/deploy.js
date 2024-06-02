@@ -10,6 +10,7 @@ export async function deployInstancesToServers({ns, instance, servers, timeOffse
     let currentRam = getMaxRam(currentServer)
     killGrep(ns, currentServer, ['grow', 'hack', 'weaken'])
     while (currentRam >= currentInstance[0]?.ram) {
+      let shouldSleep = false
       const toRun = {}
       while (currentInstance.length && currentRam >= currentInstance[0].ram) {
         const currentThread = currentInstance.shift()
@@ -20,15 +21,19 @@ export async function deployInstancesToServers({ns, instance, servers, timeOffse
       }
       if (currentInstance.length === 0 && totalRam - (getMaxRam(currentServer) - currentRam) > instanceRam) {
         currentInstance = [...instance]
+        count++
+        shouldSleep = true
       }
-      ns.print('deploy instance on ', currentServer.hostname, ': ', ++count)
+      ns.tprint('deploy instance ' + count + ' on ', currentServer.hostname)
       ns.print('toRun:', toRun)
       for (const script of Object.keys(toRun)) {
         ns.scp(script, currentServer.hostname)
         ns.exec(script, currentServer.hostname, toRun[script][0], target, toRun[script][1] ?? 0)
       }
-      ns.print('Wait ', ns.tFormat(timeOffset), '...')
-      await ns.sleep(timeOffset)
+      ns.tprint('Wait ', ns.tFormat(timeOffset), '...')
+      if (shouldSleep) {
+        await ns.sleep(timeOffset)
+      }
     }
     totalRam-= getMaxRam(currentServer)
   } while (givenServers.length)

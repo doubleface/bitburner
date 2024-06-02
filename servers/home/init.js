@@ -18,9 +18,12 @@ export async function main(ns) {
   if (weakenThreadsNeeded > 5) {
     ns.tprint('First needs weakening...')
     ns.tprint('In loop...')
+    ns.tprint('weakenRamNeeded: ', ns.formatRam(weakenRamNeeded))
+    ns.tprint('totalRam: ', ns.formatRam(totalRam))
     const threads = (totalRam / weakenRam) > 1000
       ? Math.ceil(totalRam / weakenRamNeeded * 10)
       : Math.ceil(totalRam / weakenRamNeeded)
+    ns.tprint('threads: ', threads)
     const instance = createInstance('loop/weaken.js', threads, weakenRam)
     const timeOffset = weakenTime / (totalRam / weakenRam)
     await deployInstancesToServers({
@@ -42,7 +45,6 @@ export async function main(ns) {
     const growRam = 1.75
     const minimalInstanceRam = 5 * growRam + 4 * weakenRam
     const maximalNbInstances = Math.floor(totalRam / minimalInstanceRam)
-    ns.tprint('maximalNbInstances: ', maximalNbInstances)
     const factor = maximalNbInstances > 1000
       ? maximalNbInstances / 1000
       : 1
@@ -52,7 +54,6 @@ export async function main(ns) {
       ...Array(growThreads).fill({ script: 'loop/grow.js', ram: growRam }),
       ...Array(weakenThreads).fill({ script: 'loop/weaken.js', ram: weakenRam })
     ]
-    ns.tprint('instance: ', instance)
     const instanceRam = growThreads * growRam + weakenThreads * weakenRam
     const nbInstances = totalRam / instanceRam
     ns.tprint('nbInstances: ', nbInstances)

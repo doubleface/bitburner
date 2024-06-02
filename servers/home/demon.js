@@ -42,6 +42,33 @@ function updateHud(ns) {
 
     headers.push('diff. min')
     values.push('' + ns.getServerMinSecurityLevel(currentTarget).toFixed(1))
+
+    headers.push('-----------')
+    values.push('-----------')
+
+    const infiltrationData = JSON.parse(ns.read('data/infiltrations.json'))
+    const infiltrationDataAccessible = infiltrationData.filter(i => i.difficulty < 1.2)
+    let bestInfiltration = null
+    if (!infiltrationDataAccessible.length) {
+      infiltrationData.sort((a, b) => a.difficulty > b.difficulty ? -1 : 1)
+      bestInfiltration = infiltrationData.pop()
+    } else {
+      bestInfiltration = infiltrationDataAccessible.pop()
+    }
+
+    headers.push('Infiltration')
+    values.push(bestInfiltration.location.name)
+    headers.push('City')
+    values.push(bestInfiltration.location.city)
+    headers.push('Rep')
+    values.push(ns.formatNumber(bestInfiltration.reward.tradeRep))
+    headers.push('Money')
+    values.push('$'+ ns.formatNumber(bestInfiltration.reward.sellCash))
+
+    if (bestInfiltration.difficulty >= 1) {
+      headers.push('Difficulty')
+      values.push(bestInfiltration.difficultyPercent)
+    }
   }
   const doc = eval('window.document')
   doc.getElementById('overview-extra-hook-0').innerText = headers.join("\n")

@@ -6,6 +6,7 @@ export async function main(ns) {
   await runAndWait(ns, 'libs/scan.js')
   await runAndWait(ns, 'libs/updatePlayer.js')
   await runAndWait(ns, 'libs/updateServersState.js')
+  await runAndWait(ns, 'libs/infiltration.js')
   await runAndWait(ns, 'libs/analyzeServers.js')
   await runAndWait(ns, 'libs/hackAll.js')
   await runAndWait(ns, 'actions/checkNextActions.js')

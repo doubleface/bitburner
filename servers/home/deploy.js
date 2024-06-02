@@ -3,8 +3,9 @@ import { deployInstancesToServers, getMaxRam } from 'libs/deploy'
 /** @param {NS} ns */
 export async function main(ns) {
   const flags = ns.flags([
+    ['offset', -1],
     ['dryRun', false],
-    ['safetyFactor', 1.5],
+    ['safetyFactor', 10],
     ['g', null],
     ['h', null],
     ['w', null]
@@ -23,19 +24,23 @@ export async function main(ns) {
 
   let { hackThreads, growThreads, weakenThreads, hackTime } = targetServerData
 
+  hackThreads = Number(flags.h) || hackThreads
+  growThreads = safetyFactor * (Number(flags.g) || growThreads)
+  weakenThreads = safetyFactor * (Number(flags.w) || weakenThreads)
+
   const hackScriptRam = 1.7
   const growScriptRam = 1.75
   const weakenScriptRam = 1.75
 
   // total ram available on hacked servers
   let totalRam = servers.reduce((memo, s) => memo + getMaxRam(s), 0)
-  ns.print('totalRam: ', totalRam)
+  ns.tprint('totalRam: ', ns.formatRam(totalRam))
 
   // an instance is a group of equilibred threads
   const instanceRam = hackThreads * hackScriptRam + growThreads * growScriptRam + weakenThreads * weakenScriptRam
-  ns.print('instanceRam: ', instanceRam)
+  ns.tprint('instanceRam: ', ns.formatRam(instanceRam))
   let nbInstances = Math.floor(totalRam / instanceRam)
-  ns.print('nbInstances: ', nbInstances)
+  ns.tprint('nbInstances: ', nbInstances)
 
   if (nbInstances === 0) {
     // minimize the number of hack threads
@@ -53,9 +58,9 @@ export async function main(ns) {
     growThreads*= factor
     weakenThreads*= factor
   }
-  hackThreads = Number(flags.h) || Math.floor(hackThreads)
-  growThreads = Number(flags.g) || Math.ceil(growThreads*safetyFactor)
-  weakenThreads = Number(flags.w) || Math.ceil(weakenThreads*safetyFactor)
+  hackThreads = Math.floor(hackThreads)
+  growThreads = Math.ceil(growThreads)
+  weakenThreads = Math.ceil(weakenThreads)
 
   const newInstanceRam = hackThreads * hackScriptRam + growThreads * growScriptRam + weakenThreads * weakenScriptRam
   ns.print('newInstanceRam: ', newInstanceRam)
@@ -76,7 +81,7 @@ export async function main(ns) {
     ns,
     instance,
     servers,
-    timeOffset: hackTime * 4 / nbInstances,
+    timeOffset: flags.offset === -1 ? hackTime * 4 / nbInstances : flags.offset,
     totalRam,
     target
   })

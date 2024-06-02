@@ -17,53 +17,45 @@ export async function main(ns) {
   let weakenTime = ns.getHackTime(target) * 4
   if (weakenThreadsNeeded > 5) {
     ns.tprint('First needs weakening...')
-    if (weakenRamNeeded < totalRam) {
-      ns.tprint('In one batch...')
-      const instance = createInstance('batch/weaken.js', 1000, weakenRam)
-      await deployInstancesToServers({
-        ns,
-        instance,
-        servers,
-        timeOffset: 0,
-        totalRam,
-        target
-      })
-      ns.tprint('Waiting for ', ns.tFormat(weakenTime), '...')
-      await ns.sleep(weakenTime + 1000)
-    } else {
-      ns.tprint('In loop...')
-      ns.print('weakenRamNeeded: ', ns.formatRam(weakenRamNeeded))
-      ns.print('totalRam: ', ns.formatRam(totalRam))
-      const threads = (total / weakenRamNeeded) > 1000
-        ? 1000
-        : 1
-      const instance = createInstance('loop/weaken.js', threads, weakenRam)
-      const timeOffset = weakenTime / (totalRam / weakenRam)
-      await deployInstancesToServers({
-        ns,
-        instance,
-        servers,
-        timeOffset,
-        totalRam,
-        target
-      })
-      while (ns.getServerMinSecurityLevel(target) < ns.getServerSecurityLevel(target)) {
-        await ns.sleep(timeOffset)
-      }
+    ns.tprint('In loop...')
+    const threads = (totalRam / weakenRam) > 1000
+      ? Math.ceil(totalRam / weakenRamNeeded * 10)
+      : Math.ceil(totalRam / weakenRamNeeded)
+    const instance = createInstance('loop/weaken.js', threads, weakenRam)
+    const timeOffset = weakenTime / (totalRam / weakenRam)
+    await deployInstancesToServers({
+      ns,
+      instance,
+      servers,
+      timeOffset,
+      totalRam,
+      target
+    })
+    while (ns.getServerMinSecurityLevel(target) < ns.getServerSecurityLevel(target)) {
+      await ns.sleep(timeOffset)
     }
   }
-
 
   if (ns.getServerMinSecurityLevel(target) < ns.getServerSecurityLevel(target)
     || ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)
   ) {
     const growRam = 1.75
+    const minimalInstanceRam = 5 * growRam + 4 * weakenRam
+    const maximalNbInstances = Math.floor(totalRam / minimalInstanceRam)
+    ns.tprint('maximalNbInstances: ', maximalNbInstances)
+    const factor = maximalNbInstances > 1000
+      ? maximalNbInstances / 1000
+      : 1
+    const growThreads = Math.floor(5 * factor)
+    const weakenThreads = Math.floor(4 * factor)
     const instance = [
-      ...Array(5).fill({ script: 'loop/grow.js', ram: growRam }),
-      ...Array(4).fill({ script: 'loop/weaken.js', ram: weakenRam })
+      ...Array(growThreads).fill({ script: 'loop/grow.js', ram: growRam }),
+      ...Array(weakenThreads).fill({ script: 'loop/weaken.js', ram: weakenRam })
     ]
-    const instanceRam = 5 * growRam + 4 * weakenRam
+    ns.tprint('instance: ', instance)
+    const instanceRam = growThreads * growRam + weakenThreads * weakenRam
     const nbInstances = totalRam / instanceRam
+    ns.tprint('nbInstances: ', nbInstances)
     weakenTime = ns.getHackTime(target) * 4
     const timeOffset = weakenTime / nbInstances
     ns.tprint('Waiting for ', ns.tFormat(weakenTime), '...')

@@ -4,5 +4,16 @@ import { getAction } from 'libs/utils'
 export async function main(ns) {
   const [actionFile] = ns.args
   const action = getAction(ns, actionFile)
-  ns.toast('You can now purchase Tor Router for $' + ns.formatNumber(action.cost), "warning", null)
+  const costString = '$' + ns.formatNumber(action.cost)
+  try {
+    const result = ns.singularity.purchaseTor()
+    if (result) {
+      ns.toast('Purchased TOR router for ' + costString, 'success', null)
+    } else {
+      ns.toast('Failed to purchase TOR router for ' + costString, 'error', null)
+    }
+  } catch (err) {
+    ns.print('No singularity api available: ', err.message)
+    ns.toast('You can now purchase Tor Router for ' + costString, "warning", null)
+  }
 }

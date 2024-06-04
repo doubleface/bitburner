@@ -1,17 +1,24 @@
 import { deployInstancesToServers, getMaxRam } from 'libs/deploy'
 
+const scriptFlags = [
+  ['offset', -1],
+  ['dryRun', false],
+  ['nbInstancesLimit', 2000],
+  ['g', null],
+  ['h', null],
+  ['w', null]
+]
+
+export function autocomplete(data, args) {
+  data.flags(scriptFlags)
+  return data.servers.filter(server => server.includes(args[0]))
+}
+
 /** @param {NS} ns */
 export async function main(ns) {
-  const flags = ns.flags([
-    ['offset', -1],
-    ['dryRun', false],
-    ['safetyFactor', 10],
-    ['nbInstancesLimit', 1000],
-    ['g', null],
-    ['h', null],
-    ['w', null]
-  ])
-  const {dryRun, safetyFactor} = flags
+  const flags = ns.flags(scriptFlags)
+  const {dryRun} = flags
+
   const [target] = ns.args
   let servers = JSON.parse(ns.read('data/serversStateWithAnalyze.json'))
 
@@ -26,8 +33,8 @@ export async function main(ns) {
   let { hackThreads, growThreads, weakenThreads, hackTime } = targetServerData
 
   hackThreads = Number(flags.h) || hackThreads
-  growThreads = safetyFactor * (Number(flags.g) || growThreads)
-  weakenThreads = safetyFactor * (Number(flags.w) || weakenThreads)
+  growThreads = Number(flags.g) || growThreads
+  weakenThreads = Number(flags.w) || weakenThreads
 
   const hackScriptRam = 1.7
   const growScriptRam = 1.75
@@ -72,6 +79,8 @@ export async function main(ns) {
     ns.exit()
   }
 
+  ns.run('setCurrentTarget.js', 1, target)
+
   const instance = [
     ...Array(hackThreads).fill({ script: 'loop/hack.js', ram: hackScriptRam, offset: hackTime * 3 - 2000 }),
     ...Array(growThreads).fill({ script: 'loop/grow.js', ram: growScriptRam, offset: hackTime * 0.8 - 1000 }),
@@ -87,8 +96,4 @@ export async function main(ns) {
     target
   })
   ns.toast("Deployed " + target + ' hacking on servers', "success", null)
-}
-
-export function autocomplete(data, args) {
-  return data.servers.filter(server => server.includes(args[0]))
 }

@@ -8,6 +8,8 @@ export async function main(ns) {
 
   servers.sort((a, b) => getMaxRam(a) > getMaxRam(b) ? -1 : 1)
 
+  ns.run('setCurrentTarget.js', 1, target)
+
   const weakenRam = 1.7
   const toWeaken = ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target)
   const weakenThreadsNeeded = Math.ceil(toWeaken / 0.05)
@@ -48,8 +50,8 @@ export async function main(ns) {
     const factor = maximalNbInstances > 1000
       ? maximalNbInstances / 1000
       : 1
-    const growThreads = Math.floor(5 * factor)
-    const weakenThreads = Math.floor(4 * factor)
+    const growThreads = Math.ceil(5 * factor)
+    const weakenThreads = Math.ceil(4 * factor)
     const instance = [
       ...Array(growThreads).fill({ script: 'loop/grow.js', ram: growRam }),
       ...Array(weakenThreads).fill({ script: 'loop/weaken.js', ram: weakenRam })

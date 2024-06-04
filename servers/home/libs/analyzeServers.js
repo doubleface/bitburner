@@ -10,7 +10,7 @@ export async function main(ns) {
     .filter(server => server.hasAdminRights)
 
   const totalRam = servers
-    .reduce((memo, s) => memo + s.maxRam, 0)
+    .reduce((memo, s) => memo + getMaxRam(s), 0)
   
   servers = servers
     .filter(s => (debug && target) ? s.hostname === target : true)
@@ -70,23 +70,34 @@ function getHackStats(ns, serverData, playerData, totalRam, debug) {
   })
 
   growThreads = threads[0]
-  logIfDebug(ns, 'final growThreads', growThreads, debug)
   hackThreads = threads[1]
   logIfDebug(ns, 'final hackThreads', hackThreads, debug)
   weakenThreads = threads[2]
-  logIfDebug(ns, 'final weakenThreads', weakenThreads, debug)
 
   const hackScriptRam = 1.7
   const growScriptRam = 1.75
   const weakenScriptRam = 1.75
 
-  const instanceRam = Math.ceil(growThreads) * growScriptRam + Math.floor(hackThreads) * hackScriptRam + Math.ceil(weakenThreads) * weakenScriptRam
+  let instanceRam = Math.ceil(growThreads) * growScriptRam + Math.floor(hackThreads) * hackScriptRam + Math.ceil(weakenThreads) * weakenScriptRam
+  let nbInstances = Math.floor(totalRam / instanceRam)
+
+  const automaticSafetyFactor = (nbInstances / 2000 * 9 + 1)
+  logIfDebug(ns, 'automaticSafetyFactor', automaticSafetyFactor, debug)
+
+  growThreads = automaticSafetyFactor * growThreads
+  logIfDebug(ns, 'final growThreads', growThreads, debug)
+  weakenThreads = automaticSafetyFactor * weakenThreads
+  logIfDebug(ns, 'final weakenThreads', weakenThreads, debug)
+
+  instanceRam = Math.ceil(growThreads) * growScriptRam + Math.floor(hackThreads) * hackScriptRam + Math.ceil(weakenThreads) * weakenScriptRam
   logIfDebug(ns, 'instanceRam', instanceRam, debug)
-  const nbInstances = Math.floor(totalRam / instanceRam)
+
+  nbInstances = Math.floor(totalRam / instanceRam)
   logIfDebug(ns, 'nbInstances', nbInstances, debug)
-  const hackMoney = serverData.moneyMax * hackPercent
+
+  const hackMoney = serverData.moneyMax * hackPercent // money stollen with a single thread
   logIfDebug(ns, 'hackMoney', hackMoney, debug)
-  const possibleYield = nbInstances * hackChance * hackMoney * 1000 / hackTime
+  const possibleYield = nbInstances * hackChance * hackMoney * hackThreads * 1000 / hackTime // 1000 is to have seconds
   logIfDebug(ns, 'possibleYield', possibleYield, debug)
 
   return {
@@ -98,7 +109,9 @@ function getHackStats(ns, serverData, playerData, totalRam, debug) {
     hackTime,
     weakenTime,
     hackChance,
-    possibleYield
+    possibleYield,
+    nbInstances,
+    automaticSafetyFactor
   }
 }
 
@@ -113,4 +126,10 @@ function getOptimalHackChance(playerData, serverData) {
 
 function optimalHackAnalyze(ns, serverData) {
   return ns.hackAnalyze(serverData.hostname) / (100 - serverData.hackDifficulty) * (100 - serverData.minDifficulty)
+}
+
+export function getMaxRam(server) {
+  return server.hostname === 'home'
+    ? Math.max(server.maxRam - 100, 0) // keep 100 Go of home server free for running programs
+    : server.maxRam
 }

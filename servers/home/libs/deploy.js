@@ -4,7 +4,7 @@ export async function deployInstancesToServers({ns, instance, servers, timeOffse
   ns.print('instance :', instance)
   const instanceRam = instance.reduce((memo, t) => memo + t.ram, 0)
 
-  let count= 0
+  let count=1
   do {
     const currentServer = givenServers.pop()
     let currentRam = getMaxRam(currentServer)
@@ -19,19 +19,18 @@ export async function deployInstancesToServers({ns, instance, servers, timeOffse
           ? [1, currentThread.offset ?? 0]
           : [toRun[currentThread.script][0] + 1, currentThread.offset ?? 0]
       }
+      ns.tprint('deploy instance ' + count + ' on ', currentServer.hostname)
       if (currentInstance.length === 0 && totalRam - (getMaxRam(currentServer) - currentRam) > instanceRam) {
         currentInstance = [...instance]
         count++
         shouldSleep = true
       }
-      ns.tprint('deploy instance ' + count + ' on ', currentServer.hostname)
-      ns.print('toRun:', toRun)
       for (const script of Object.keys(toRun)) {
         ns.scp(script, currentServer.hostname)
         ns.exec(script, currentServer.hostname, toRun[script][0], target, toRun[script][1] ?? 0)
       }
-      ns.tprint('Wait ', ns.tFormat(timeOffset), '...')
       if (shouldSleep) {
+        ns.tprint('Wait ', ns.tFormat(timeOffset), '...')
         await ns.sleep(timeOffset)
       }
     }
@@ -41,7 +40,7 @@ export async function deployInstancesToServers({ns, instance, servers, timeOffse
 
 export function getMaxRam(server) {
   return server.hostname === 'home'
-    ? server.maxRam - 50 // keep 50 Go of home server free for running programs
+    ? Math.max(server.maxRam - 100, 0) // keep 100 Go of home server free for running programs
     : server.maxRam
 }
 

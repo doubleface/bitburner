@@ -16,6 +16,6 @@ function displayServer(ns, serverData) {
   ns.tprint(' difficulty: ', ns.formatNumber(serverData.hackDifficulty), ' / ', ns.formatNumber(serverData.minDifficulty))
   ns.tprint(' weaken time: ', ns.tFormat(serverData.weakenTime))
   ns.tprint(' current weaken time: ', ns.tFormat(serverData.currentWeakenTime))
-  ns.tprint(' yield: ', ns.formatNumber(serverData.possibleYield))
+  ns.tprint(' yield: ', ns.formatNumber(serverData.possibleYield || 0))
   ns.tprint(' ')
 }

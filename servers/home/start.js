@@ -5,6 +5,6 @@ export async function main(ns) {
     ns.rm(file, 'home')
   }
   ns.run('demon.js')
-  await runAndWait(ns, 'update.js')
-  await runAndWait(ns, 'deploy.js', 1, 'n00dles', '-g', 7, '-h', 4, '-w', 1, '--safetyFactor', 1)
+  await ns.sleep(5000)
+  await runAndWait(ns, 'deploy.js', 1, 'n00dles', '-g', 7, '-h', 4, '-w', 1)
 }
